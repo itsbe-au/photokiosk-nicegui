@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "photokiosk-nicegui"
+version = "0.1.0"
+description = ""
+authors = ["Beau Nieuwveld <beau@aluminium-stewardship.org>"]
+readme = "README.md"
+packages = [{include = "photokiosk_nicegui"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+nicegui = "^1.2.20"
+wagtail = "^5.0.1"
+python-dotenv = "^1.0.0"
+httpx = "^0.24.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

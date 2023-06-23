@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
+
+
+
+body {
+    font-family: 'Caveat', cursive;
+}
+
+.font-serif {
+    font-family: 'Special Elite', serif !important;
+}
