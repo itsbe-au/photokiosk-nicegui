@@ -1,5 +1,11 @@
 #!/bin/bash
 
+export DISPLAY=:0
+
+killall firefox
+killall unclutter
+killall chromium-browser
+
 # sudo apt-get install unclutter
 unclutter -idle 1 -root &
 
@@ -18,6 +24,6 @@ docker run -dit -p 80:7777 --restart unless-stopped --name photokiosk -v "$(pwd)
 
 echo "Photokiosk docker container launched."
 
-# Finally, launch Firefox in private kiosk mode
-echo "Launching Firefox."
-firefox -private-window --kiosk http://localhost
+# Finally, launch Chrome in private kiosk mode
+echo "Launching Chrome."
+chromium-browser --kiosk http://localhost

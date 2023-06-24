@@ -215,6 +215,8 @@ def read_config():
 def save_config():
     # Save the display time to config.dat
     print("Saving config...")
+    conn.serialize()
+
     with open("config.dat", "wb") as f:
         pickle.dump(Config.DISPLAY_TIME, f)
 
