@@ -20,10 +20,10 @@ docker container rm photokiosk
 echo "Building the app."
 git pull
 docker build -t photokiosk .
-docker run -dit -p 80:7777 --restart unless-stopped --name photokiosk -v "$(pwd)"/images:/app/images photokiosk
+docker run -dit -p 80:7777 --restart unless-stopped --name photokiosk -v "$(pwd)":/app photokiosk
 
 echo "Photokiosk docker container launched."
 
 # Finally, launch Chrome in private kiosk mode
 echo "Launching Chrome."
-chromium-browser --kiosk http://localhost
+chromium-browser --kiosk http://localhost --force-device-scale-factor=3.5
