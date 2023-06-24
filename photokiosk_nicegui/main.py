@@ -53,18 +53,19 @@ class Photoframe:
 
     @ui.refreshable
     async def photoframe(self):
-        ui.image(f"images/{self.image}").classes("w-full h-[calc(100vh-170px)] rounded-xl") #.props("fit=contain")
-        with ui.footer().classes("bg-dark"):
-            ui.button(on_click=lambda: ui.open("/upload")).props("icon=settings no-caps flat rounded").classes('fixed bottom-12 right-4 text-black')
-            label = (
-                ui.label()
-                .bind_text(self, "caption")
-                .classes(
-                    "transition-all duration-1000 opacity-0 text-center py-8 text-4xl w-full"
-                )
-            )
-            await asyncio.sleep(0.1)
-            label.classes(add="opacity-100", remove="opacity-0")
+        with ui.image(f"images/{self.image}").classes("flex flex-auto h-[96vh] m-auto grow  rounded-xl"):
+            ui.label().bind_text(self, "caption").classes("text-4xl text-white w-full absolute-bottom backdrop-blur-sm")
+        # with ui.footer().classes("bg-dark"):
+        #     ui.button(on_click=lambda: ui.open("/upload")).props("icon=settings no-caps flat rounded").classes('fixed bottom-12 right-4 text-black')
+        #     label = (
+        #         ui.label()
+        #         .bind_text(self, "caption")
+        #         .classes(
+        #             "transition-all duration-1000 opacity-0 text-center py-8 text-4xl w-full"
+        #         )
+        #     )
+        #     await asyncio.sleep(0.1)
+        #     label.classes(add="opacity-100", remove="opacity-0")
 
 
 class CaptionCard:
