@@ -21,7 +21,7 @@ app.add_static_files('/static', os.path.join(os.path.dirname(__file__), 'static'
 
 
 class Config:
-    DISPLAY_TIME = 5
+    DISPLAY_TIME = 30
 
 
 class Photoframe:
@@ -42,8 +42,14 @@ class Photoframe:
                 ).fetchone()
                 or None
         )
-        self.photoframe.refresh()
+        
         self.counter = next(iter(range(self.counter + 1, len(self.photos))), 0)
+        
+        if self.counter == 0:
+            ui.open('/')
+        else:
+            self.photoframe.refresh()
+    
 
     @ui.refreshable
     async def photoframe(self):
@@ -189,7 +195,7 @@ def startup():
     conn = sqlite3.connect("db.sqlite3")
     cursor = conn.cursor()
     cursor.execute(
-        "CREATE TABLE PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
+        "CREATE TABLE IF NOT EXISTS PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
     )
     conn.commit()
     read_config()
@@ -215,5 +221,7 @@ def save_config():
 
 app.on_startup(startup)
 app.on_shutdown(save_config)
+
+
 
 ui.run(port=7777, dark=True)
