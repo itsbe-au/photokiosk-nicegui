@@ -14,12 +14,8 @@ load_dotenv(".env.local")
 API_ROOT = os.getenv("API_ROOT")
 API_TOKEN = os.getenv("API_TOKEN")
 
-try:
-    conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
-    cursor = conn.cursor()
-except Exception as e:
-    conn = None
-    cursor = None
+conn = None
+cursor = None
 
 app.add_static_files('/static', os.path.join(os.path.dirname(__file__), 'static'))
 
@@ -51,7 +47,7 @@ class Photoframe:
 
     @ui.refreshable
     async def photoframe(self):
-        ui.image(f"images/{self.image}").classes("w-full h-[calc(100vh-164px)] rounded-xl").props("fit=contain")
+        ui.image(f"images/{self.image}").classes("w-full h-[calc(100vh-170px)] rounded-xl") #.props("fit=contain")
         with ui.footer().classes("bg-dark"):
             ui.button(on_click=lambda: ui.open("/upload")).props("icon=settings no-caps flat rounded").classes('fixed bottom-12 right-4 text-black')
             label = (
@@ -189,13 +185,14 @@ def startup():
         print("Creating db.sqlite3")
         with open("db.sqlite3", "w") as f:
             pass
-        conn = sqlite3.connect("db.sqlite3")
-        cursor = conn.cursor()
-        cursor.execute(
-            "CREATE TABLE PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
-        )
-        conn.commit()
-        read_config()
+        
+    conn = sqlite3.connect("db.sqlite3")
+    cursor = conn.cursor()
+    cursor.execute(
+        "CREATE TABLE PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
+    )
+    conn.commit()
+    read_config()
 
 
 def read_config():
