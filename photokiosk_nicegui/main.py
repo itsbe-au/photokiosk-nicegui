@@ -14,8 +14,12 @@ load_dotenv(".env.local")
 API_ROOT = os.getenv("API_ROOT")
 API_TOKEN = os.getenv("API_TOKEN")
 
-conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
-cursor = conn.cursor()
+try:
+    conn = sqlite3.connect("db.sqlite3", check_same_thread=False)
+    cursor = conn.cursor()
+except Exception as e:
+    conn = None
+    cursor = None
 
 app.add_static_files('/static', os.path.join(os.path.dirname(__file__), 'static'))
 
@@ -176,6 +180,24 @@ def upload():
     ui.button("Save captions", on_click=page.save_all).props("icon=save no-caps rounded").classes('sticky m-auto bottom-4 justify-center')
 
 
+def startup():
+    global conn
+    global cursor
+    
+    # Ensure db.sqlite3 exists, and create the PHOTOS table if it doesn't.
+    if not os.path.exists("db.sqlite3"):
+        print("Creating db.sqlite3")
+        with open("db.sqlite3", "w") as f:
+            pass
+        conn = sqlite3.connect("db.sqlite3")
+        cursor = conn.cursor()
+        cursor.execute(
+            "CREATE TABLE PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
+        )
+        conn.commit()
+        read_config()
+
+
 def read_config():
     # Read config.dat to get the display time.
     print("Reading config...")
@@ -194,7 +216,7 @@ def save_config():
         pickle.dump(Config.DISPLAY_TIME, f)
 
 
-app.on_startup(read_config)
+app.on_startup(startup)
 app.on_shutdown(save_config)
 
 ui.run(port=7777, dark=True)
