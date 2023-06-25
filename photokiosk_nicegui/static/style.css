@@ -10,6 +10,10 @@ body {
     font-family: "Special Elite", sans-serif !important;
 }
 
+.nicegui-content {
+    height: 100vh !important;
+}
+
 ::-webkit-scrollbar {
     display: none !important;
 }

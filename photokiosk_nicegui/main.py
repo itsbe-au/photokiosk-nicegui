@@ -53,8 +53,9 @@ class Photoframe:
 
     @ui.refreshable
     async def photoframe(self):
-        with ui.image(f"images/{self.image}").classes("flex flex-auto h-[96vh] m-auto grow  rounded-xl"):
-            ui.label().bind_text(self, "caption").classes("text-4xl text-white w-full absolute-bottom backdrop-blur-sm")
+        image_display = ui.image(f"images/{self.image}").classes("rounded-xl m-auto").props("fit=contain")
+        ui.label().bind_text(self, "caption").classes("text-6xl text-white absolute bottom-8 py-6 self-center w-auto xl:w-full max-w-screen-2xl rounded-xl text-center backdrop-blur-lg mx-8")
+
         # with ui.footer().classes("bg-dark"):
         #     ui.button(on_click=lambda: ui.open("/upload")).props("icon=settings no-caps flat rounded").classes('fixed bottom-12 right-4 text-black')
         #     label = (
@@ -151,6 +152,7 @@ class Upload:
 @ui.page("/")
 async def index():
     root_layout()
+
     page = Photoframe()
 
     if page.photos == []:
