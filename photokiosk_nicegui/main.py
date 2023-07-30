@@ -67,7 +67,7 @@ class CaptionCard:
         self.caption = caption
 
     def render(self):
-        with ui.card().tight() as card:
+        with ui.card().tight().classes('w-auto sm:w-64 h-fit') as card:
             ui.image(f"images/{self.image}").classes("h-64 object-fit")
             with ui.card_section():
                 ui.label(self.image).tailwind.font_weight('bold')
@@ -119,7 +119,7 @@ class Upload:
 
     @ui.refreshable
     def file_list(self):
-        with ui.element('div').classes('flex flex-wrap justify-center gap-8'):
+        with ui.element('div').classes('flex flex-wrap gap-8'):
             for file in self.files:
                 captions = dict(self.captions)
                 caption = captions.get(file)
@@ -166,8 +166,8 @@ def upload():
 
 
     page = Upload()
-    with ui.element('div').classes('flex flex-auto gap-8'):
-        ui.button("Back", on_click=lambda: ui.open("/")).props("icon=arrow_back no-caps flat rounded")
+    with ui.element('div').classes('flex flex-col gap-8 justify-start'):
+        ui.button("Back", on_click=lambda: ui.open("/")).props("icon=arrow_back no-caps flat rounded align=left")
         ui.markdown(
             """
             # Upload new photos here
@@ -177,7 +177,7 @@ def upload():
         page.time_change()
         page.filepicker()
         page.file_list()
-        ui.button("Save captions", on_click=page.save_all).props("icon=save no-caps rounded").classes('sticky m-auto bottom-4 justify-center')
+        ui.button("Save captions", on_click=page.save_all).props("icon=save no-caps rounded").classes('sticky w-fit bottom-4')
 
 
 def startup():
