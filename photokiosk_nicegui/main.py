@@ -1,4 +1,5 @@
 import asyncio
+import configparser
 import os
 import pickle
 
@@ -14,10 +15,12 @@ load_dotenv(".env.local")
 API_ROOT = os.getenv("API_ROOT")
 API_TOKEN = os.getenv("API_TOKEN")
 
-conn = None
-cursor = None
+conn = sqlite3.connect("db.sqlite3")
+cursor = conn.cursor()
 
 app.add_static_files('/static', os.path.join(os.path.dirname(__file__), 'static'))
+
+config_file = configparser.ConfigParser()
 
 
 class Config:
@@ -53,20 +56,9 @@ class Photoframe:
 
     @ui.refreshable
     async def photoframe(self):
-        image_display = ui.image(f"images/{self.image}").classes("rounded-xl m-auto").props("fit=contain")
-        ui.label().bind_text(self, "caption").classes("text-6xl text-white absolute bottom-8 py-6 px-32 self-center max-w-screen-2xl rounded-xl text-center backdrop-blur-lg mx-8")
-
-        # with ui.footer().classes("bg-dark"):
-        #     ui.button(on_click=lambda: ui.open("/upload")).props("icon=settings no-caps flat rounded").classes('fixed bottom-12 right-4 text-black')
-        #     label = (
-        #         ui.label()
-        #         .bind_text(self, "caption")
-        #         .classes(
-        #             "transition-all duration-1000 opacity-0 text-center py-8 text-4xl w-full"
-        #         )
-        #     )
-        #     await asyncio.sleep(0.1)
-        #     label.classes(add="opacity-100", remove="opacity-0")
+        ui.image(f"images/{self.image}").classes("rounded-xl m-auto").props("fit=contain")
+        ui.label().bind_text(self, "caption").classes("text-4xl sm:text-6xl text-white absolute bottom-8 sm:py-4 sm:px-8 self-center max-w-screen-2xl rounded-xl text-center sm:backdrop-blur-lg mx-8")
+        ui.link("Upload new photos", "/upload").props("icon=upload no-caps flat rounded").classes('self-center sm:hidden')
 
 
 class CaptionCard:
@@ -75,15 +67,16 @@ class CaptionCard:
         self.caption = caption
 
     def render(self):
-        with ui.card().tight().classes("w-64") as card:
+        with ui.card().tight() as card:
             ui.image(f"images/{self.image}").classes("h-64 object-fit")
-            with ui.card_section().classes('flex flex-col gap-4 items-center'):
+            with ui.card_section():
                 ui.label(self.image).tailwind.font_weight('bold')
                 ui.input(placeholder="Write a caption...").bind_value(self, 'caption').classes('w-full').props(
-                    'filled label-stacked').on('blur', self.save_caption)
+                    'filled dense label-stacked').on('blur', self.save_caption)
 
     def save_caption(self):
         # cursor.execute(f"INSERT INTO PHOTOS (filename, caption) VALUES ('{self.image.split('.')[0]}', '{self.caption}') ON CONFLICT(filename) DO UPDATE SET caption='{self.caption}'")
+
         sql = f"SELECT * FROM PHOTOS WHERE filename='{self.image}'"
         results = cursor.execute(sql).fetchone()
         if results:
@@ -122,11 +115,11 @@ class Upload:
 
     def time_change(self):
         ui.number("How many seconds to display each photo?", min=1, max=300).bind_value(Config, 'DISPLAY_TIME').props(
-            'filled label-stacked').classes('w-96')
+            'filled label-stacked').classes('sm:w-96 w-full')
 
     @ui.refreshable
     def file_list(self):
-        with ui.row().classes("gap-8 rounded-md"):
+        with ui.element('div').classes('flex flex-wrap justify-center gap-8'):
             for file in self.files:
                 captions = dict(self.captions)
                 caption = captions.get(file)
@@ -139,14 +132,14 @@ class Upload:
             multiple=True,
             auto_upload=True,
             on_upload=lambda files: self.process_uploaded_files(files),
-        ).props('no-thumbnails accept=".jpg, .png, image/*"').classes('w-96')
+        ).props('no-thumbnails accept=".jpg, .png, image/*"').classes('sm:w-96 w-full')
 
     def save_all(self):
         try:
             conn.commit()
-            ui.notify("Captions have been saved!", type="success")
+            ui.notify("Captions have been saved!", type="positive")
         except Exception as e:
-            ui.notify(f"Error: {e}", type="error")
+            ui.notify(f"Error: {e}", type="negative")
 
 
 @ui.page("/")
@@ -170,33 +163,30 @@ async def index():
 def upload():
     time_changed = False
     root_layout(font_scheme='serif')
-    ui.button("Back", on_click=lambda: ui.open("/")).props("icon=arrow_back no-caps flat rounded")
-    ui.markdown(
-        """
-        # Upload new photos here
-        Please provide a caption for each photo.
-        """
-    )
+
 
     page = Upload()
-    page.time_change()
-    page.filepicker()
-    page.file_list()
-    ui.button("Save captions", on_click=page.save_all).props("icon=save no-caps rounded").classes('sticky m-auto bottom-4 justify-center')
+    with ui.element('div').classes('flex flex-auto gap-8'):
+        ui.button("Back", on_click=lambda: ui.open("/")).props("icon=arrow_back no-caps flat rounded")
+        ui.markdown(
+            """
+            # Upload new photos here
+            Please provide a caption for each photo.
+            """
+        )
+        page.time_change()
+        page.filepicker()
+        page.file_list()
+        ui.button("Save captions", on_click=page.save_all).props("icon=save no-caps rounded").classes('sticky m-auto bottom-4 justify-center')
 
 
 def startup():
-    global conn
-    global cursor
-    
     # Ensure db.sqlite3 exists, and create the PHOTOS table if it doesn't.
     if not os.path.exists("db.sqlite3"):
         print("Creating db.sqlite3")
         with open("db.sqlite3", "w") as f:
             pass
-        
-    conn = sqlite3.connect("db.sqlite3")
-    cursor = conn.cursor()
+
     cursor.execute(
         "CREATE TABLE IF NOT EXISTS PHOTOS (filename TEXT PRIMARY KEY, caption TEXT)"
     )
@@ -207,21 +197,23 @@ def startup():
 def read_config():
     # Read config.dat to get the display time.
     print("Reading config...")
-    try:
-        with open("config.dat", "rb") as f:
-            Config.DISPLAY_TIME = pickle.load(f)
-            print("Photos will display for {} seconds".format(Config.DISPLAY_TIME))
-    except FileNotFoundError:
-        pass
+    config_file.read("config.ini")
+
+    if not config_file.has_section("display"):
+        return
+
+    Config.DISPLAY_TIME = config_file.getint("display", "DISPLAY_TIME")
+    print(f"Display time set to {Config.DISPLAY_TIME} seconds")
 
 
 def save_config():
     # Save the display time to config.dat
     print("Saving config...")
-    conn.serialize()
 
-    with open("config.dat", "wb") as f:
-        pickle.dump(Config.DISPLAY_TIME, f)
+    config_file["display"] = {"DISPLAY_TIME": str(Config.DISPLAY_TIME)}
+
+    with open("config.ini", "w") as f:
+        config_file.write(f)
 
 
 app.on_startup(startup)
@@ -229,4 +221,8 @@ app.on_shutdown(save_config)
 
 
 
-ui.run(port=7777, dark=True)
+if __name__ in ("__main__", "__mp_main__"):
+    ui.run(title="Photokiosk",
+           favicon="📸",
+           port=7777,
+           dark=True)
